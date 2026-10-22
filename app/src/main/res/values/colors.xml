@@ -1,0 +1,8 @@
+<resources>
+    <color name="tw_bg_dark">#070B13</color>
+    <color name="tw_card_dark">#0D1424</color>
+    <color name="tw_primary_blue">#2563EB</color>
+    <color name="tw_accent_green">#10B981</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="ic_launcher_background">#070B13</color>
+</resources>
