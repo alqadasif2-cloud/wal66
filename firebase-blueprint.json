@@ -1,0 +1,388 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Represents an authenticated user and their profile",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique user ID matching auth.uid or legacy local ID"
+        },
+        "username": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Username of the account"
+        },
+        "displayName": {
+          "type": "string",
+          "maxLength": 64,
+          "description": "Public display name"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["owner", "user"],
+          "description": "User role: owner or standard user"
+        },
+        "accountStatus": {
+          "type": "string",
+          "enum": ["active", "suspended"],
+          "description": "Account status"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Account creation timestamp"
+        },
+        "lastActivityAt": {
+          "type": "string",
+          "description": "Timestamp of last activity"
+        },
+        "walletId": {
+          "type": "string",
+          "description": "Associated wallet ID"
+        },
+        "demoAddress": {
+          "type": "string",
+          "description": "Crypto wallet address"
+        },
+        "email": {
+          "type": "string",
+          "description": "Optional email"
+        }
+      },
+      "required": ["userId", "username", "role", "accountStatus", "createdAt", "demoAddress"]
+    },
+    "Wallet": {
+      "title": "Wallet",
+      "description": "Holds the user's balances and configuration",
+      "type": "object",
+      "properties": {
+        "walletId": {
+          "type": "string",
+          "description": "Unique wallet identifier"
+        },
+        "ownerUserId": {
+          "type": "string",
+          "description": "User ID of the wallet owner"
+        },
+        "networkType": {
+          "type": "string",
+          "enum": ["BEP20", "ERC20", "TRC20"],
+          "description": "Default network"
+        },
+        "demoAddress": {
+          "type": "string",
+          "description": "Public wallet address"
+        },
+        "totalDemoBalance": {
+          "type": "number",
+          "description": "Total balance"
+        },
+        "availableDemoBalance": {
+          "type": "number",
+          "description": "Available transferable balance"
+        },
+        "lockedDemoBalance": {
+          "type": "number",
+          "description": "Time-locked balance"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Last update timestamp"
+        }
+      },
+      "required": ["walletId", "ownerUserId", "networkType", "demoAddress", "totalDemoBalance", "availableDemoBalance", "lockedDemoBalance"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "A financial transaction or transfer between users",
+      "type": "object",
+      "properties": {
+        "transactionId": {
+          "type": "string",
+          "description": "Unique transaction ID"
+        },
+        "senderUserId": {
+          "type": "string",
+          "description": "Sender user ID"
+        },
+        "senderUsername": {
+          "type": "string",
+          "description": "Sender username"
+        },
+        "senderAddress": {
+          "type": "string",
+          "description": "Sender address"
+        },
+        "receiverUserId": {
+          "type": "string",
+          "description": "Receiver user ID"
+        },
+        "receiverUsername": {
+          "type": "string",
+          "description": "Receiver username"
+        },
+        "receiverAddress": {
+          "type": "string",
+          "description": "Receiver address"
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount transferred"
+        },
+        "currency": {
+          "type": "string",
+          "description": "Currency or token"
+        },
+        "network": {
+          "type": "string",
+          "description": "Network used"
+        },
+        "transactionType": {
+          "type": "string",
+          "enum": ["receive", "send", "refund", "admin_adjustment", "lock_release"],
+          "description": "Type of transaction"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["completed", "locked", "refunded", "cancelled", "rejected", "pending"],
+          "description": "Transaction status"
+        },
+        "statusTextAr": {
+          "type": "string",
+          "description": "Arabic status description"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Creation timestamp"
+        },
+        "lockUntil": {
+          "type": "string",
+          "description": "Time-lock expiration timestamp"
+        },
+        "lockDurationMinutes": {
+          "type": "number",
+          "description": "Lock duration in minutes"
+        },
+        "notes": {
+          "type": "string",
+          "maxLength": 256,
+          "description": "Optional notes"
+        },
+        "originalTransactionId": {
+          "type": "string",
+          "description": "Original transaction ID for refunds"
+        }
+      },
+      "required": ["transactionId", "senderUserId", "receiverUserId", "amount", "transactionType", "status", "createdAt"]
+    },
+    "Conversation": {
+      "title": "Conversation",
+      "description": "A chat thread between two users",
+      "type": "object",
+      "properties": {
+        "conversationId": {
+          "type": "string",
+          "description": "Conversation ID"
+        },
+        "participantIds": {
+          "type": "array",
+          "description": "List of participant user IDs"
+        },
+        "participantNames": {
+          "type": "object",
+          "description": "Map of user ID to display name"
+        },
+        "lastMessageText": {
+          "type": "string",
+          "maxLength": 500,
+          "description": "Snippet of last message"
+        },
+        "lastMessageAt": {
+          "type": "string",
+          "description": "Timestamp of last message"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of last update"
+        }
+      },
+      "required": ["conversationId", "participantIds", "updatedAt"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "A message within a conversation",
+      "type": "object",
+      "properties": {
+        "messageId": {
+          "type": "string",
+          "description": "Unique message ID"
+        },
+        "conversationId": {
+          "type": "string",
+          "description": "Parent conversation ID"
+        },
+        "senderUserId": {
+          "type": "string",
+          "description": "User ID of sender"
+        },
+        "senderUsername": {
+          "type": "string",
+          "description": "Username of sender"
+        },
+        "receiverUserId": {
+          "type": "string",
+          "description": "User ID of recipient"
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 1000,
+          "description": "Message content"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Message creation timestamp"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Whether the recipient read the message"
+        }
+      },
+      "required": ["messageId", "conversationId", "senderUserId", "receiverUserId", "text", "createdAt"]
+    },
+    "MarketPrice": {
+      "title": "MarketPrice",
+      "description": "Live market price for a crypto asset",
+      "type": "object",
+      "properties": {
+        "symbol": {
+          "type": "string",
+          "description": "Asset trading symbol"
+        },
+        "name": {
+          "type": "string",
+          "description": "Asset display name"
+        },
+        "price": {
+          "type": "number",
+          "description": "Current price in USD"
+        },
+        "bid": {
+          "type": "number",
+          "description": "Highest bid price"
+        },
+        "ask": {
+          "type": "number",
+          "description": "Lowest ask price"
+        },
+        "spread": {
+          "type": "number",
+          "description": "Ask minus bid spread"
+        },
+        "change24h": {
+          "type": "number",
+          "description": "24h percentage price change"
+        },
+        "high24h": {
+          "type": "number",
+          "description": "24h highest price"
+        },
+        "low24h": {
+          "type": "number",
+          "description": "24h lowest price"
+        },
+        "volume24h": {
+          "type": "number",
+          "description": "24h trading volume"
+        },
+        "updatedAt": {
+          "type": "string",
+          "description": "Timestamp of price retrieval"
+        },
+        "isLive": {
+          "type": "boolean",
+          "description": "Whether current price is real-time or stale"
+        }
+      },
+      "required": ["symbol", "price", "change24h", "updatedAt"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "In-app notifications for transfers and updates",
+      "type": "object",
+      "properties": {
+        "notificationId": {
+          "type": "string",
+          "description": "Unique notification ID"
+        },
+        "recipientUserId": {
+          "type": "string",
+          "description": "Recipient user ID"
+        },
+        "transactionId": {
+          "type": "string",
+          "description": "Related transaction ID"
+        },
+        "title": {
+          "type": "string",
+          "description": "English title"
+        },
+        "titleAr": {
+          "type": "string",
+          "description": "Arabic title"
+        },
+        "body": {
+          "type": "string",
+          "description": "English body"
+        },
+        "bodyAr": {
+          "type": "string",
+          "description": "Arabic body"
+        },
+        "createdAt": {
+          "type": "string",
+          "description": "Notification creation timestamp"
+        },
+        "read": {
+          "type": "boolean",
+          "description": "Read status"
+        },
+        "type": {
+          "type": "string",
+          "description": "Notification type"
+        }
+      },
+      "required": ["notificationId", "recipientUserId", "titleAr", "bodyAr", "createdAt", "read", "type"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and account settings"
+    },
+    "/wallets/{userId}": {
+      "schema": "Wallet",
+      "description": "User wallets and balances"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Transactions history and transfers"
+    },
+    "/notifications/{notificationId}": {
+      "schema": "Notification",
+      "description": "Cross-device user notifications"
+    },
+    "/conversations/{conversationId}": {
+      "schema": "Conversation",
+      "description": "Conversations list"
+    },
+    "/conversations/{conversationId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Messages inside a conversation"
+    },
+    "/marketPrices/{symbol}": {
+      "schema": "MarketPrice",
+      "description": "Shared live crypto market prices cache"
+    }
+  }
+}

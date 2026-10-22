@@ -1,0 +1,120 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global default-deny safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'alqadasif2@gmail.com' ||
+        request.auth.token.email == 'alsonadi44@gmail.com' ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow get: if isSignedIn();
+      allow list: if isSignedIn();
+      allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Wallets collection
+    match /wallets/{userId} {
+      allow get: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow list: if isSignedIn() && (resource.data.ownerUserId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow update: if isSignedIn() && (isOwner(userId) || isAdmin());
+      allow delete: if isAdmin();
+    }
+
+    // Transactions collection
+    match /transactions/{transactionId} {
+      allow get: if isSignedIn() && (
+        resource.data.senderUserId == request.auth.uid ||
+        resource.data.receiverUserId == request.auth.uid ||
+        isAdmin()
+      );
+      allow list: if isSignedIn() && (
+        resource.data.senderUserId == request.auth.uid ||
+        resource.data.receiverUserId == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.senderUserId == request.auth.uid ||
+        isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        isAdmin() ||
+        resource.data.receiverUserId == request.auth.uid ||
+        resource.data.senderUserId == request.auth.uid
+      );
+      allow delete: if isAdmin();
+    }
+
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow get: if isSignedIn() && (resource.data.recipientUserId == request.auth.uid || isAdmin());
+      allow list: if isSignedIn() && (resource.data.recipientUserId == request.auth.uid || isAdmin());
+      allow create: if isSignedIn();
+      allow update: if isSignedIn() && (resource.data.recipientUserId == request.auth.uid || isAdmin());
+      allow delete: if isSignedIn() && (resource.data.recipientUserId == request.auth.uid || isAdmin());
+    }
+
+    // Conversations collection
+    match /conversations/{conversationId} {
+      allow get: if isSignedIn() && (
+        request.auth.uid in resource.data.participantIds ||
+        isAdmin()
+      );
+      allow list: if isSignedIn() && (
+        request.auth.uid in resource.data.participantIds ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.auth.uid in request.resource.data.participantIds ||
+        isAdmin()
+      );
+      allow update: if isSignedIn() && (
+        request.auth.uid in resource.data.participantIds ||
+        isAdmin()
+      );
+      allow delete: if isAdmin();
+
+      // Messages sub-collection
+      match /messages/{messageId} {
+        allow read: if isSignedIn();
+        allow create: if isSignedIn() && request.resource.data.senderUserId == request.auth.uid;
+        allow update: if isSignedIn() && (
+          resource.data.receiverUserId == request.auth.uid ||
+          resource.data.senderUserId == request.auth.uid ||
+          isAdmin()
+        );
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Public Market Prices (read by all, written by authenticated sync engine)
+    match /marketPrices/{symbol} {
+      allow read: if true;
+      allow write: if isSignedIn();
+    }
+  }
+}

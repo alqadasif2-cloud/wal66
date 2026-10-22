@@ -1,0 +1,89 @@
+name: CI Build & Test
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-web:
+    name: Build & Lint Web App
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+
+      - name: Configure npm
+        run: npm config set legacy-peer-deps true
+
+      - name: Install Dependencies
+        run: npm install --legacy-peer-deps
+
+      - name: Type Check & Lint
+        run: npm run lint
+
+      - name: Build Web Application
+        run: npm run build
+
+      - name: Upload Web Build Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: web-dist
+          path: dist/
+          retention-days: 14
+
+  build-android:
+    name: Build Android APK (if Gradle present)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Check for Gradle wrapper
+        id: check_gradle
+        run: |
+          if [ -f "./gradlew" ]; then
+            echo "has_gradle=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_gradle=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Set up JDK 21
+        if: steps.check_gradle.outputs.has_gradle == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Setup Android SDK
+        if: steps.check_gradle.outputs.has_gradle == 'true'
+        uses: android-actions/setup-android@v3
+
+      - name: Grant Execute Permission for Gradlew
+        if: steps.check_gradle.outputs.has_gradle == 'true'
+        run: chmod +x gradlew
+
+      - name: Build Android Debug APK
+        if: steps.check_gradle.outputs.has_gradle == 'true'
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Upload Android APK Artifact
+        if: steps.check_gradle.outputs.has_gradle == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: trust-wallet-pro-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          retention-days: 14
